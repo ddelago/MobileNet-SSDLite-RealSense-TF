@@ -15,3 +15,4 @@ RaspberryPi3(Raspbian Stretch) + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLi
 - Go to the Object Detection folder under research.
 - Clone this repository here
   - You can also add the object detection path to you Python path and clone this repo wherever you like.
+  - You will have to modify line 138 in `object_deteection/utils/label_map_util.py`
