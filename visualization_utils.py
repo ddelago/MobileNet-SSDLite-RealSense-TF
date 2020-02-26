@@ -619,9 +619,24 @@ def visualize_boxes_and_labels_on_image_array(
           int_xmin=Decimal(str(xmin*width)).quantize(Decimal('0'), rounding=ROUND_HALF_UP)
           int_ymax=Decimal(str(ymax*height)).quantize(Decimal('0'), rounding=ROUND_HALF_UP)
           int_xmax=Decimal(str(xmax*width)).quantize(Decimal('0'), rounding=ROUND_HALF_UP)
-          meters = depth_frame.as_depth_frame().get_distance(int_xmin+int((int_xmax-int_xmin)/2), int_ymin+int((int_ymax-int_ymin)/2))
+          
+          int_new_y = int_ymin + int((int_ymax-int_ymin)/2)
+          int_new_x = int_xmin + int((int_xmax-int_xmin)/2)
+          
+          meters = 0
+          pixel_counter = 0
+          for x in range(int(int_new_x-5), int(int_new_x+5)) :
+             for y in range(int(int_new_y-5), int(int_new_y+5)) :
+                meters += depth_frame.as_depth_frame().get_distance(x,y)
+                pixel_counter += 1
+          
+          meters = meters/pixel_counter
+          
           depth_text = " {:.2f}".format(meters) + " meters away"
 
+          
+          
+          
         box_to_display_str_map[box].append(display_str + depth_text)
         if agnostic_mode:
           box_to_color_map[box] = 'DarkOrange'
