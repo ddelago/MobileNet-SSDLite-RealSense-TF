@@ -10,6 +10,8 @@ RaspberryPi3(Raspbian Stretch) + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLi
 - OpenGL
 
 ## Windows environment construction sequence
+- `pip install tensorflow`
+- `pip install tensorflow-gpu`
 - Go [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and pip install the PyOpenGL and PyOpenGL_accelerate wheels.
 - Clone the [Tensorflow models](https://github.com/tensorflow/models) repository.
 - Go to the Object Detection folder under research.
