@@ -11,3 +11,7 @@ RaspberryPi3(Raspbian Stretch) + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLi
 
 ## Windows environment construction sequence
 - Go [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and pip install the PyOpenGL and PyOpenGL_accelerate wheels.
+- Clone the [Tensorflow models](https://github.com/tensorflow/models) repository.
+- Go to the Object Detection folder under research.
+- Clone this repository here
+  - You can also add the object detection path to you Python path and clone this repo wherever you like.
