@@ -10,4 +10,4 @@ RaspberryPi3(Raspbian Stretch) + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLi
 - OpenGL
 
 ## Windows environment construction sequence
-- Go (here)[https://www.lfd.uci.edu/~gohlke/pythonlibs/] and pip install the PyOpenGL and PyOpenGL_accelerate wheels.
+- Go [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and pip install the PyOpenGL and PyOpenGL_accelerate wheels.
