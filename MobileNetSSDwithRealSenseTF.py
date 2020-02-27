@@ -1,11 +1,6 @@
 import sys
-if sys.version_info.major < 3 or sys.version_info.minor < 4:
-    print("Please using python3.4 or greater!")
-    exit(1)
-
 import os
 import numpy as np
-import argparse
 import cv2
 import pyrealsense2 as rs
 import tensorflow as tf
@@ -13,17 +8,7 @@ sys.path.append('..')
 from utils import label_map_util
 import visualization_utils as vis_util
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
-inWidth = 300
-inHeight = 300
-WHRatio = inWidth / float(inHeight)
-inScaleFactor = 0.007843
-meanVal = 127.5
 pipeline = None
-
 try:
     HOME_PATH = os.path.expanduser('~')
     CWD_PATH = 'model'
@@ -82,23 +67,6 @@ except:
     print("\n\nFinished\n\n")
     sys.exit()
 
-
-def init():
-    glClearColor(0.7, 0.7, 0.7, 0.7)
-
-def idle():
-    glutPostRedisplay()
-
-def resizeview(w, h):
-    glViewport(0, 0, w, h)
-    glLoadIdentity()
-    glOrtho(-w / 640, w / 640, -h / 480, h / 480, -1.0, 1.0)
-
-def keyboard(key, x, y):
-    key = key.decode('utf-8')
-    if key == 'q':
-        sys.exit()
-
 def camThread():
     # Wait for a coherent pair of frames: depth and color
     frames = pipeline.wait_for_frames()
@@ -134,37 +102,15 @@ def camThread():
         height=height,
         width=width)
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glColor3f(1.0, 1.0, 1.0)
-    glEnable(GL_TEXTURE_2D)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glBegin(GL_QUADS) 
-    glTexCoord2d(0.0, 1.0)
-    glVertex3d(-1.0, -1.0,  0.0)
-    glTexCoord2d(1.0, 1.0)
-    glVertex3d( 1.0, -1.0,  0.0)
-    glTexCoord2d(1.0, 0.0)
-    glVertex3d( 1.0,  1.0,  0.0)
-    glTexCoord2d(0.0, 0.0)
-    glVertex3d(-1.0,  1.0,  0.0)
-    glEnd()
-    glFlush()
-    glutSwapBuffers()
+    return img
 
 try:
-    glutInitWindowPosition(0, 0)
-    glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE )
-    glutCreateWindow("DEMO")
-    glutFullScreen()
-    glutDisplayFunc(camThread)
-    glutReshapeFunc(resizeview)
-    glutKeyboardFunc(keyboard)
-    init()
-    glutIdleFunc(idle)
-    glutMainLoop()
+    cv2.namedWindow('ProjectImage',cv2.WINDOW_NORMAL)
+    while True:
+        cv2.imshow('ProjectImage', camThread())
+        # Exit at the end of the video on the 'q' keypress
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 except:
     import traceback
     traceback.print_exc()
