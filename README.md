@@ -1,5 +1,5 @@
 # MobileNet-SSDLite-RealSense-TF
-RaspberryPi3(Raspbian Stretch) + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLite) + RealSense D435 + Tensorflow + without Neural Compute Stick(NCS)
+Windows + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLite) + RealSense D415 + Tensorflow 2.1.0
 
 ## Environment
 - OpenCV 4.1.2
