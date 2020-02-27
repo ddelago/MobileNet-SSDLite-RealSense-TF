@@ -10,7 +10,7 @@ import PIL.ImageDraw as ImageDraw
 import PIL.ImageFont as ImageFont
 import six
 import tensorflow as tf
-
+from pyimagesearch.centroidtracker import CentroidTracker
 from object_detection.core import standard_fields as fields
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 
@@ -584,6 +584,10 @@ def visualize_boxes_and_labels_on_image_array(
   box_to_instance_masks_map = {}
   box_to_instance_boundaries_map = {}
   box_to_keypoints_map = collections.defaultdict(list)
+  
+  ct = CentroidTracker()  
+  rects = []
+  
   if not max_boxes_to_draw:
     max_boxes_to_draw = boxes.shape[0]
   for i in range(min(max_boxes_to_draw, boxes.shape[0])):
@@ -612,7 +616,7 @@ def visualize_boxes_and_labels_on_image_array(
             display_str = '{}%'.format(int(100*scores[i]))
           else:
             display_str = '{}: {}%'.format(display_str, int(100*scores[i]))
-
+         
           # Measure distance
           ymin, xmin, ymax, xmax = box
           int_ymin=Decimal(str(ymin*height)).quantize(Decimal('0'), rounding=ROUND_HALF_UP)
@@ -633,11 +637,14 @@ def visualize_boxes_and_labels_on_image_array(
           meters = meters/pixel_counter
           
           depth_text = " {:.2f}".format(meters) + " meters away"
-
           
           
           
         box_to_display_str_map[box].append(display_str + depth_text)
+        
+        rects.append((int_ymin, int_xmin, int_ymax, int_ymax))
+        objects = ct.update(rects)
+        print(objects)
         if agnostic_mode:
           box_to_color_map[box] = 'DarkOrange'
         else:
