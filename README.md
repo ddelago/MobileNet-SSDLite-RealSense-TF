@@ -4,8 +4,8 @@ Windows + MobileNetv2-SSDLite(Tensorflow/MobileNetv2SSDLite) + RealSense D415 + 
 ## Environment
 - OpenCV 4.1.2
 - MobileNetv2-SSDLite [MSCOCO]
-- RealSense D435 (Firmware ver v5.10.6)
-- Python3.7
+- RealSense D415
+- Python 3.7
 - Tensorflow 2.1.0
 - OpenGL
 
