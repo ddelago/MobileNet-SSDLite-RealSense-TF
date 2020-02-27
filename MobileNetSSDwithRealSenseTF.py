@@ -9,6 +9,18 @@ from utils import label_map_util
 import visualization_utils as vis_util
 from pyimagesearch.centroidtracker import CentroidTracker
 
+def find_device_that_supports_advanced_mode() :
+    ctx = rs.context()
+    ds5_dev = rs.device()
+    devices = ctx.query_devices()
+    DS5_product_ids = ["0AD1", "0AD2", "0AD3", "0AD4", "0AD5", "0AF6", "0AFE", "0AFF", "0B00", "0B01", "0B03", "0B07"]
+    for dev in devices:
+        if dev.supports(rs.camera_info.product_id) and str(dev.get_info(rs.camera_info.product_id)) in DS5_product_ids:
+            if dev.supports(rs.camera_info.name):
+                print("Found device that supports advanced mode:", dev.get_info(rs.camera_info.name))
+            return dev
+    raise Exception("No device that supports advanced mode was found")
+
 pipeline = None
 try:
     HOME_PATH = os.path.expanduser('~')
@@ -53,6 +65,12 @@ try:
     # Configure depth and color streams RealSense D435
     pipeline = rs.pipeline()
     config = rs.config()
+    colorizer = rs.colorizer()
+
+    with open('config.json', 'r') as file:
+        json_text = file.read().strip()
+        rs.rs400_advanced_mode(find_device_that_supports_advanced_mode()).load_json(json_text)
+
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
@@ -69,7 +87,7 @@ except:
 
 """ Find objects, add bounding box and class name, using vis_utils module """
 def camThread():
-    img, _, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
+    img, colorized_depth, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
 
     # Draw the results of the detection (aka 'visulaize the results')
     img = vis_util.visualize_boxes_and_labels_on_image_array(
@@ -85,11 +103,11 @@ def camThread():
         height=height,
         width=width)
 
-    return img
+    return img, colorized_depth
 
 """ Find objects, add bounding box and class name """
 def camThreadSimple():
-    img, _, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
+    img, colorized_depth, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
         
     # loop over the detections
     for i in range(len(boxes[0])):
@@ -111,13 +129,13 @@ def camThreadSimple():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.circle(img, (center_x, center_y), 4, (0, 255, 0), -1)
 
-    return img
+    return img, colorized_depth
 
 """ Find objects, assign IDs, and calculate center by reducing error """
 ct = CentroidTracker()  
 objects = None
 def camThreadCentroid():
-    img, _, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
+    img, colorized_depth, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
         
     rects = []
     # loop over the detections
@@ -147,7 +165,7 @@ def camThreadCentroid():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 cv2.circle(img, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
-    return img
+    return img, colorized_depth
 
 def get_frame_data():
     # Wait for a coherent pair of frames: depth and color
@@ -163,6 +181,8 @@ def get_frame_data():
     height = color_image.shape[0]
     width = color_image.shape[1]
 
+    colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
+
     frame_expanded = np.expand_dims(color_image, axis=0)
 
     # Perform the actual detection by running the model with the image as input
@@ -170,23 +190,24 @@ def get_frame_data():
         [detection_boxes, detection_scores, detection_classes, num_detections],
         feed_dict={image_tensor: frame_expanded})
 
-    return color_image, depth_image, depth_frame, (height, width), (boxes, scores, classes, num) 
+    return color_image, colorized_depth, depth_frame, (height, width), (boxes, scores, classes, num) 
 
 def calc_depth(depth_frame, x, y):
     # Get an average of pixel depths
     meters = 0
     pixel_counter = 0
-    for x in range(int(x-5), int(x+5)) :
-        for y in range(int(y-5), int(y+5)) :
+    for x in range(x-5, x+5) :
+        for y in range(y-5, y+5) :
             meters += depth_frame.as_depth_frame().get_distance(x,y)
             pixel_counter += 1
     
     return meters/pixel_counter
     
 try:
-    cv2.namedWindow('ProjectImage',cv2.WINDOW_NORMAL)
+    cv2.namedWindow('Objects',cv2.WINDOW_NORMAL)
     while True:
-        cv2.imshow('ProjectImage', camThreadSimple())
+        img, depth = camThreadSimple()
+        cv2.imshow('Objects', cv2.hconcat([img, depth]))
         # Exit at the end of the video on the 'q' keypress
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
