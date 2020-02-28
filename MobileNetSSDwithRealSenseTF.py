@@ -32,7 +32,6 @@ try:
     #MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09'
     PATH_TO_CKPT = os.path.join(CWD_PATH, 'frozen_inference_graph.pb')
     PATH_TO_LABELS = os.path.join(CWD_PATH, 'mscoco_label_map.pbtxt')
-    swapRB = True
     NUM_CLASSES = 90
 
     # Load the label map.
@@ -122,7 +121,8 @@ def camThreadSimple():
         
     # loop over the detections
     for i in range(len(boxes[0])):
-        if scores[0][i] > 0.55:
+        # Only search for bottles, WILL NEED TO REMOVE OTHER CLASSES FROM MODEL LATER
+        if scores[0][i] > 0.55 and category_index[classes[0][i]]['name'] == 'bottle':
             box = tuple(boxes[0][i].tolist())
             ymin=round(box[0]*height)
             xmin=round(box[1]*width)
