@@ -6,8 +6,8 @@ import pyrealsense2 as rs
 import tensorflow as tf
 sys.path.append('..')
 from utils import label_map_util
-import visualization_utils as vis_util
-from pyimagesearch.centroidtracker import CentroidTracker
+from modules import visualization_utils
+from modules.centroidtracker import CentroidTracker
 
 # TF GPU options to avoid out of memory errors
 # gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.300)
@@ -100,7 +100,7 @@ def camThread():
     img, colorized_depth, depth_frame, (height, width), (boxes, scores, classes, num) = get_frame_data()
 
     # Draw the results of the detection (aka 'visulaize the results')
-    img = vis_util.visualize_boxes_and_labels_on_image_array(
+    img = visualization_utils.visualize_boxes_and_labels_on_image_array(
         img,
         np.squeeze(boxes),
         np.squeeze(classes).astype(np.int32),
