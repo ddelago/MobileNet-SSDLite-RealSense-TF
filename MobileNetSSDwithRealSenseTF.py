@@ -9,17 +9,21 @@ from utils import label_map_util
 import visualization_utils as vis_util
 from pyimagesearch.centroidtracker import CentroidTracker
 
-def find_device_that_supports_advanced_mode() :
-    ctx = rs.context()
-    ds5_dev = rs.device()
-    devices = ctx.query_devices()
-    DS5_product_ids = ["0AD1", "0AD2", "0AD3", "0AD4", "0AD5", "0AF6", "0AFE", "0AFF", "0B00", "0B01", "0B03", "0B07"]
-    for dev in devices:
-        if dev.supports(rs.camera_info.product_id) and str(dev.get_info(rs.camera_info.product_id)) in DS5_product_ids:
-            if dev.supports(rs.camera_info.name):
-                print("Found device that supports advanced mode:", dev.get_info(rs.camera_info.name))
-            return dev
-    raise Exception("No device that supports advanced mode was found")
+# TF GPU options to avoid out of memory errors
+# gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.300)
+# sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
+
+configs_848x480 = {
+    'HA': 'configs/HighAccuracy848x480x60fps.json',
+    'HD': 'configs/HighDensity848x480x60fps.json',
+    'HAND': 'configs/Hand848x480x60fps.json',
+    'D': 'configs/Default848x480x60fps.json'
+}
+configs_1280x720 = {
+    'HA': 'configs/HighAccuracy1280x720.json',
+    'HD': 'configs/HighDensity1280x720.json',
+    'D': 'configs/Default1280x720.json'
+}
 
 pipeline = None
 try:
@@ -66,16 +70,23 @@ try:
     pipeline = rs.pipeline()
     config = rs.config()
     colorizer = rs.colorizer()
+    hole_filler = rs.hole_filling_filter(2)
+    spatial = rs.spatial_filter()
+    temporal = rs.temporal_filter()
 
-    with open('config.json', 'r') as file:
-        json_text = file.read().strip()
-        rs.rs400_advanced_mode(find_device_that_supports_advanced_mode()).load_json(json_text)
-
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 60)
+    config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 60)
 
     # Start streaming
     pipeline.start(config)
+
+    # Load settings
+    device = rs.context().devices[0]
+    advanced_mode = rs.rs400_advanced_mode(device)
+    with open(configs_848x480['D'], 'r') as file:
+        json_text = file.read().strip()
+        advanced_mode.load_json(json_text)
+
 except:
     import traceback
     traceback.print_exc()
@@ -91,7 +102,7 @@ def camThread():
 
     # Draw the results of the detection (aka 'visulaize the results')
     img = vis_util.visualize_boxes_and_labels_on_image_array(
-        color_image,
+        img,
         np.squeeze(boxes),
         np.squeeze(classes).astype(np.int32),
         np.squeeze(scores),
@@ -174,6 +185,10 @@ def get_frame_data():
     color_frame = frames.get_color_frame()
     if not depth_frame or not color_frame:
         return
+
+    # depth_frame = spatial.process(depth_frame)
+    # depth_frame = temporal.process(depth_frame)
+    depth_frame = hole_filler.process(depth_frame)
         
     # Convert images to numpy arrays
     depth_image = np.asanyarray(depth_frame.get_data())
@@ -206,6 +221,7 @@ def calc_depth(depth_frame, x, y):
 try:
     cv2.namedWindow('Objects',cv2.WINDOW_NORMAL)
     while True:
+        # with tf.device('/GPU:0'):
         img, depth = camThreadSimple()
         cv2.imshow('Objects', cv2.hconcat([img, depth]))
         # Exit at the end of the video on the 'q' keypress
