@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from google.protobuf import text_format
 from tensorflow.python.platform import gfile
 
@@ -19,4 +19,4 @@ def graphdef_to_pbtxt(filename):
   return
 
 
-graphdef_to_pbtxt('model/frozen_inference_graph.pb')  # here you can write the name of the file to be converted
+graphdef_to_pbtxt('../model/frozen_inference_graph.pb')  # here you can write the name of the file to be converted
