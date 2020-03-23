@@ -10,7 +10,7 @@ from modules import visualization_utils
 from modules.centroidtracker import CentroidTracker
 
 # TF GPU options to avoid out of memory errors
-# gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.300)
+# gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=.500)
 # sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 
 configs_848x480 = {
@@ -28,10 +28,10 @@ configs_1280x720 = {
 pipeline = None
 try:
     HOME_PATH = os.path.expanduser('~')
-    CWD_PATH = 'new_model'
+    CWD_PATH = 'MobileNetV2_bottles-9034'
     #MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09'
     PATH_TO_CKPT = os.path.join(CWD_PATH, 'frozen_inference_graph.pb')
-    PATH_TO_LABELS = os.path.join(CWD_PATH, 'mscoco_label_map.pbtxt')
+    PATH_TO_LABELS = os.path.join(CWD_PATH, 'label_map.pbtxt')
     NUM_CLASSES = 90
 
     # Load the label map.
@@ -134,7 +134,7 @@ def camThreadSimple():
             center_y = ymin + round((ymax-ymin)/2)
 
             depth = calc_depth(depth_frame, center_x, center_y)
-            text = "{}, {:.2f} meters away".format(category_index[classes[0][i]]['name'], depth)
+            text = "{} - {:.2f}%, {:.2f} meters away".format(category_index[classes[0][i]]['name'], scores[0][i]*100, depth)
             
             cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
             cv2.putText(img, text, (center_x-10, center_y-10),
@@ -189,7 +189,7 @@ def get_frame_data():
 
     # depth_frame = spatial.process(depth_frame)
     # depth_frame = temporal.process(depth_frame)
-    # depth_frame = hole_filler.process(depth_frame)
+    depth_frame = hole_filler.process(depth_frame)
         
     # Convert images to numpy arrays
     depth_image = np.asanyarray(depth_frame.get_data())
@@ -222,7 +222,6 @@ def calc_depth(depth_frame, x, y):
 try:
     cv2.namedWindow('Objects',cv2.WINDOW_NORMAL)
     while True:
-        # with tf.device('/GPU:0'):
         img, depth = camThreadSimple()
         cv2.imshow('Objects', cv2.hconcat([img, depth]))
         # Exit at the end of the video on the 'q' keypress
