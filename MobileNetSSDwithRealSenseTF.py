@@ -10,8 +10,8 @@ from modules import visualization_utils
 from modules.centroidtracker import CentroidTracker
 
 # TF GPU options to avoid out of memory errors
-# gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=.500)
-# sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
+gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=.500)
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 
 configs_848x480 = {
     'HA': 'configs/HighAccuracy848x480x60fps.json',
@@ -28,10 +28,10 @@ configs_1280x720 = {
 pipeline = None
 try:
     HOME_PATH = os.path.expanduser('~')
-    CWD_PATH = 'MobileNetV2_bottles-9034'
+    CWD_PATH = 'MobileNetV2'
     #MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09'
     PATH_TO_CKPT = os.path.join(CWD_PATH, 'frozen_inference_graph.pb')
-    PATH_TO_LABELS = os.path.join(CWD_PATH, 'label_map.pbtxt')
+    PATH_TO_LABELS = os.path.join(CWD_PATH, 'mscoco_label_map.pbtxt')
     NUM_CLASSES = 90
 
     # Load the label map.
@@ -73,8 +73,8 @@ try:
     spatial = rs.spatial_filter()
     temporal = rs.temporal_filter()
 
-    config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 60)
-    config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 60)
+    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 
     # Start streaming
     pipeline.start(config)
@@ -82,7 +82,7 @@ try:
     # Load settings
     device = rs.context().devices[0]
     advanced_mode = rs.rs400_advanced_mode(device)
-    with open(configs_848x480['D'], 'r') as file:
+    with open(configs_1280x720['HD'], 'r') as file:
         json_text = file.read().strip()
         advanced_mode.load_json(json_text)
 
@@ -121,9 +121,9 @@ def camThreadSimple():
         
     # loop over the detections
     for i in range(len(boxes[0])):
-        # Only search for bottles, WILL NEED TO REMOVE OTHER CLASSES FROM MODEL LATER
-        # if scores[0][i] > 0.55 and category_index[classes[0][i]]['name'] == 'bottle'
-        if scores[0][i] > 0.55:
+        # Only search for bottles
+        if scores[0][i] > 0.45 and category_index[classes[0][i]]['name'] == 'bottle':
+        # if scores[0][i] > 0.55:
             box = tuple(boxes[0][i].tolist())
             ymin=round(box[0]*height)
             xmin=round(box[1]*width)
@@ -189,7 +189,7 @@ def get_frame_data():
 
     # depth_frame = spatial.process(depth_frame)
     # depth_frame = temporal.process(depth_frame)
-    depth_frame = hole_filler.process(depth_frame)
+    # depth_frame = hole_filler.process(depth_frame)
         
     # Convert images to numpy arrays
     depth_image = np.asanyarray(depth_frame.get_data())
